@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Autopilot Nurturing — SMS AI Agent demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #242f37;
+      background: #f4f7fb;
+    }
+    @keyframes ph-splash-fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes ph-splash-bg-drift { 0% { transform: translate3d(0,0,0); } 50% { transform: translate3d(-2%, 1%, 0); } 100% { transform: translate3d(0,0,0); } }
+    .ph-splash-overlay {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background:
+        radial-gradient(1200px 600px at 85% -10%, rgba(1,78,251,0.14), transparent 60%),
+        radial-gradient(900px 600px at -10% 110%, rgba(1,78,251,0.10), transparent 55%),
+        linear-gradient(180deg, #ffffff 0%, #f4f7fb 100%);
+    }
+    .ph-splash-overlay::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(36,47,55,0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(36,47,55,0.045) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.7), transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.7), transparent 70%);
+      animation: ph-splash-bg-drift 18s ease-in-out infinite;
+    }
+    .ph-splash-shell {
+      position: relative;
+      width: min(1080px, 92vw);
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 56px;
+      align-items: center;
+      padding: 56px 8px;
+      animation: ph-splash-fade-in .55s ease-out both;
+    }
+    .ph-splash-brand-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .ph-logo {
+      display: block;
+      height: 31px;
+      width: 129px;
+    }
+    .ph-splash-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: #014EFB;
+      background: rgba(1,78,251,0.08);
+      padding: 6px 12px;
+      border-radius: 999px;
+      margin-bottom: 20px;
+    }
+    .ph-splash-eyebrow .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #014EFB;
+      box-shadow: 0 0 0 4px rgba(1,78,251,0.18);
+    }
+    .ph-splash-title {
+      font-size: clamp(40px, 6vw, 64px);
+      line-height: 1.02;
+      font-weight: 800;
+      letter-spacing: -2px;
+      color: #0a1626;
+      margin: 0 0 18px 0;
+    }
+    .ph-splash-title .accent { color: #014EFB; }
+    .ph-splash-internal {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #6e7981;
+      background: #ffffff;
+      border: 1px solid #dadee1;
+      padding: 6px 12px;
+      border-radius: 999px;
+    }
+    .ph-splash-internal svg {
+      width: 12px;
+      height: 12px;
+    }
+    .ph-phone-column {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-width: 0;
+    }
+    .ph-phone-scale-box {
+      width: calc(414px * var(--ip-scale, 1));
+      height: calc(868px * var(--ip-scale, 1));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    :root {
+      --imsg-blue: #007AFF;
+      --imsg-blue-light: #1E8FFF;
+      --imsg-blue-deep: #0052CC;
+      --imsg-green: #4CD964;
+      --imsg-green-deep: #34C759;
+      --imsg-gray-bubble: #E9E9EB;
+      --imsg-bg-chrome: #FFFFFF;
+      --imsg-hairline: rgba(60,60,67,0.18);
+      --imsg-text: #000000;
+      --imsg-text-meta: #8E8E93;
+      --imsg-placeholder: #8E8E93;
+      --ip-screen-w: 390px;
+      --ip-screen-h: 844px;
+      --ip-bezel: 12px;
+      --ip-radius-out: 55px;
+      --ip-radius-in: calc(var(--ip-radius-out) - var(--ip-bezel));
+    }
+    .ip-stage {
+      display: inline-block;
+      position: relative;
+      transform: scale(var(--ip-scale, 1));
+      transform-origin: center center;
+      will-change: transform;
+    }
+    .ip-simulator {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      color: var(--imsg-text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+    .ip-phone {
+      background: linear-gradient(180deg, #2c2c2e 0%, #1c1c1e 35%, #161618 65%, #232325 100%);
+      border-radius: var(--ip-radius-out);
+      box-shadow:
+        inset 0 0 0 1.5px #0a0a0b,
+        inset 0 0 0 2.5px #3a3a3c,
+        inset 0 0 0 3.5px #1a1a1c,
+        0 1px 2px rgba(0,0,0,0.4),
+        0 30px 60px -20px rgba(0,0,0,0.45),
+        0 14px 30px -10px rgba(0,0,0,0.25);
+      height: 868px;
+      padding: var(--ip-bezel);
+      position: relative;
+      width: 414px;
+    }
+    .ip-side-btn {
+      background: linear-gradient(180deg, #2a2a2c 0%, #1a1a1c 100%);
+      border-radius: 1.5px;
+      box-shadow:
+        inset 0 0.5px 0 rgba(255,255,255,0.08),
+        inset 0 -0.5px 0 rgba(0,0,0,0.6);
+      position: absolute;
+      width: 3px;
+    }
+    .ip-side-btn--mute { height: 28px; left: -1.5px; top: 96px; }
+    .ip-side-btn--vol-up { height: 56px; left: -1.5px; top: 156px; }
+    .ip-side-btn--vol-down { height: 56px; left: -1.5px; top: 224px; }
+    .ip-side-btn--power { height: 100px; right: -1.5px; top: 188px; }
+    .ip-screen {
+      background: #fff;
+      border-radius: var(--ip-radius-in);
+      height: var(--ip-screen-h);
+      overflow: hidden;
+      position: relative;
+      width: var(--ip-screen-w);
+    }
+    .ip-island {
+      background: #000;
+      border-radius: 999px;
+      box-shadow:
+        inset 0 0.5px 0 rgba(255,255,255,0.04),
+        0 0.5px 1px rgba(0,0,0,0.5);
+      height: 37px;
+      left: 50%;
+      position: absolute;
+      top: 11px;
+      transform: translateX(-50%);
+      width: 126px;
+      z-index: 30;
+    }
+    .ip-home {
+      background: #000;
+      border-radius: 100px;
+      bottom: 8px;
+      height: 5px;
+      left: 50%;
+      pointer-events: none;
+      position: absolute;
+      transform: translateX(-50%);
+      width: 134px;
+      z-index: 25;
+    }
+    .ip-glass-top,
+    .ip-glass-bot {
+      left: 0;
+      pointer-events: none;
+      position: absolute;
+      right: 0;
+      z-index: 18;
+    }
+    .ip-glass-top {
+      backdrop-filter: saturate(180%) blur(22px);
+      -webkit-backdrop-filter: saturate(180%) blur(22px);
+      background: linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.82) 40%, rgba(255,255,255,0.55) 68%, rgba(255,255,255,0.20) 86%, rgba(255,255,255,0) 100%);
+      height: 140px;
+      mask-image: linear-gradient(180deg, #000 0%, #000 50%, rgba(0,0,0,0.55) 78%, transparent 100%);
+      -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 50%, rgba(0,0,0,0.55) 78%, transparent 100%);
+      top: 0;
+    }
+    .ip-glass-bot {
+      backdrop-filter: saturate(180%) blur(22px);
+      -webkit-backdrop-filter: saturate(180%) blur(22px);
+      background: linear-gradient(0deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.82) 40%, rgba(255,255,255,0.55) 68%, rgba(255,255,255,0.20) 86%, rgba(255,255,255,0) 100%);
+      bottom: 0;
+      height: 108px;
+      mask-image: linear-gradient(0deg, #000 0%, #000 50%, rgba(0,0,0,0.55) 78%, transparent 100%);
+      -webkit-mask-image: linear-gradient(0deg, #000 0%, #000 50%, rgba(0,0,0,0.55) 78%, transparent 100%);
+    }
+    .ip-statusbar {
+      align-items: flex-end;
+      display: flex;
+      height: 54px;
+      justify-content: space-between;
+      left: 0;
+      padding: 0 28px 12px;
+      position: absolute;
+      right: 0;
+      top: 0;
+      z-index: 22;
+    }
+    .ip-status-left,
+    .ip-status-right {
+      align-items: center;
+      display: flex;
+    }
+    .ip-status-left {
+      gap: 6px;
+      min-width: 95px;
+    }
+    .ip-status-time,
+    .ip-status-5g {
+      color: #000;
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.4px;
+      line-height: 1;
+    }
+    .ip-status-right {
+      gap: 5px;
+      margin-right: -4px;
+    }
+    .ip-status-5g {
+      margin-left: 2px;
+      margin-right: 1px;
+    }
+    .ip-header {
+      align-items: center;
+      display: flex;
+      justify-content: center;
+      left: 0;
+      min-height: 84px;
+      padding: 4px 12px 10px;
+      position: absolute;
+      right: 0;
+      top: 54px;
+      z-index: 22;
+    }
+    .ip-avatar {
+      align-items: center;
+      background: radial-gradient(120% 100% at 30% 20%, #B7C6F0 0%, #8FA5E5 45%, #6B82CC 100%);
+      border: 0;
+      border-radius: 50%;
+      box-shadow:
+        inset 0 -1px 2px rgba(0,0,0,0.12),
+        inset 0 1px 0 rgba(255,255,255,0.25),
+        0 1px 3px rgba(0,0,0,0.06);
+      color: #fff;
+      display: flex;
+      font-size: 20px;
+      font-weight: 500;
+      height: 56px;
+      justify-content: center;
+      letter-spacing: 0.3px;
+      line-height: 1;
+      width: 56px;
+    }
+    .ip-scroll {
+      background: #fff;
+      inset: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding: 132px 0 96px;
+      position: absolute;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      z-index: 1;
+    }
+    .ip-scroll::-webkit-scrollbar { display: none; }
+    .ip-thread {
+      display: flex;
+      flex-direction: column;
+      padding: 0 14px;
+    }
+    .imsg-row {
+      display: flex;
+      width: 100%;
+    }
+    .imsg-row-me { justify-content: flex-end; }
+    .imsg-row-them { justify-content: flex-start; }
+    .imsg-bubble {
+      border-radius: 19px;
+      font-size: 16.5px;
+      letter-spacing: -0.24px;
+      line-height: 1.27;
+      max-width: 78%;
+      padding: 9px 15px 10px;
+      position: relative;
+      word-wrap: break-word;
+    }
+    .imsg-from-them {
+      background: var(--imsg-gray-bubble);
+      color: #000;
+    }
+    .imsg-from-me.mode-imsg {
+      background: linear-gradient(180deg, #1E8FFF 0%, #007AFF 100%);
+      color: #fff;
+    }
+    .imsg-text .imsg-link {
+      color: inherit;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 2px;
+    }
+    .imsg-enter {
+      animation: imsg-pop 200ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+    }
+    @keyframes imsg-pop {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .imsg-typing {
+      align-items: center;
+      display: flex;
+      gap: 4px;
+      min-width: 60px;
+      padding: 13px 15px;
+    }
+    .imsg-dot {
+      animation: imsg-typing 1.2s ease-in-out infinite;
+      background: #8E8E93;
+      border-radius: 50%;
+      height: 8px;
+      opacity: 0.45;
+      width: 8px;
+    }
+    .imsg-dot:nth-child(2) { animation-delay: 0.18s; }
+    .imsg-dot:nth-child(3) { animation-delay: 0.36s; }
+    @keyframes imsg-typing {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.45; }
+      30% { transform: translateY(-2.5px); opacity: 0.95; }
+    }
+    .ip-footer {
+      align-items: center;
+      bottom: 0;
+      display: flex;
+      gap: 10px;
+      left: 0;
+      padding: 10px 12px calc(10px + 28px);
+      position: absolute;
+      right: 0;
+      z-index: 22;
+    }
+    .ip-plus {
+      align-items: center;
+      background: #fff;
+      border: 1px solid rgba(60,60,67,0.15);
+      border-radius: 50%;
+      color: #1c1c1e;
+      cursor: pointer;
+      display: flex;
+      flex: 0 0 36px;
+      height: 36px;
+      justify-content: center;
+      width: 36px;
+    }
+    .ip-plus:active { background: #F2F2F4; }
+    .ip-input-wrap {
+      flex: 1;
+      position: relative;
+    }
+    .ip-input {
+      background: #fff;
+      border: 1px solid rgba(60,60,67,0.15);
+      border-radius: 100px;
+      color: #000;
+      font-family: inherit;
+      font-size: 17px;
+      letter-spacing: -0.32px;
+      min-height: 38px;
+      outline: none;
+      padding: 8px 44px 8px 18px;
+      width: 100%;
+    }
+    .ip-input::placeholder { color: #8E8E93; }
+    .ip-input:focus { border-color: rgba(60,60,67,0.25); }
+    .ip-trailing {
+      align-items: center;
+      border: 0;
+      display: flex;
+      justify-content: center;
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .ip-mic {
+      background: transparent;
+      color: #8E8E93;
+      height: 26px;
+      padding: 0;
+      width: 26px;
+    }
+    .ip-send {
+      animation: imsg-pop-in 140ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      background: #007AFF;
+      border-radius: 50%;
+      color: #fff;
+      cursor: pointer;
+      height: 28px;
+      padding: 0;
+      width: 28px;
+    }
+    @keyframes imsg-pop-in {
+      from { transform: translateY(-50%) scale(0.4); opacity: 0; }
+      to { transform: translateY(-50%) scale(1); opacity: 1; }
+    }
+    .hidden { display: none !important; }
+    .ph-splash-sub { color: #4a5762; font-size: 15px; line-height: 1.5; max-width: 460px; margin: 4px 0 22px; }
+    .np-settings {
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(36,47,55,0.10);
+      border-radius: 16px;
+      padding: 16px;
+      max-width: 460px;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 10px 30px rgba(1,78,251,0.06);
+    }
+    .np-row { margin-bottom: 10px; }
+    .np-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .np-field { display: flex; flex-direction: column; gap: 4px; }
+    .np-field span { font-size: 11px; font-weight: 600; color: #6b7680; text-transform: uppercase; letter-spacing: 0.04em; }
+    .np-field input {
+      font: inherit; font-size: 13px; color: #242f37;
+      padding: 8px 10px; border: 1px solid rgba(36,47,55,0.16);
+      border-radius: 9px; background: #fff; outline: none;
+    }
+    .np-field input:focus { border-color: #014EFB; }
+    .np-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+    .np-mode { display: inline-flex; background: #eef2f7; border-radius: 10px; padding: 3px; }
+    .np-mode-btn {
+      font: inherit; font-size: 13px; font-weight: 600; color: #6b7680;
+      border: 0; background: transparent; padding: 7px 14px; border-radius: 8px; cursor: pointer;
+    }
+    .np-mode-on { background: #fff; color: #014EFB; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .np-start {
+      font: inherit; font-size: 14px; font-weight: 700; color: #fff;
+      background: #014EFB; border: 0; border-radius: 10px; padding: 9px 18px; cursor: pointer;
+      transition: background 120ms ease;
+    }
+    .np-start:hover { background: #013fce; }
+    .np-start:disabled { opacity: 0.5; cursor: default; }
+    .np-status { font-size: 12px; color: #6b7680; line-height: 1.45; margin: 6px 0 0; }
+    @media (max-width: 880px) {
+      .ph-splash-sub, .np-settings { margin-inline: auto; }
+      .ph-splash-overlay { overflow: auto; }
+      .ph-splash-shell {
+        grid-template-columns: 1fr;
+        gap: 32px;
+        padding: 40px 8px;
+      }
+      .ph-splash-hero { text-align: center; }
+      .ph-splash-brand-row { justify-content: center; }
+      .ph-splash-internal { margin-inline: auto; }
+    }
+  </style>
+</head>
+<body>
+  <main id="ph-splash-overlay" class="ph-splash-overlay" aria-labelledby="ph-splash-title">
+    <div class="ph-splash-shell">
+      <section class="ph-splash-hero">
+        <div class="ph-splash-brand-row">
+          <svg class="ph-logo" width="129" height="31" viewBox="0 0 129 31" fill="none" role="img" aria-label="PriceHubble">
+            <path d="M0.645996 10.1402V17.4238C0.645996 17.6806 0.854143 17.8887 1.11091 17.8887H4.67183C4.92859 17.8887 5.13674 17.6806 5.13674 17.4238V13.4109C5.13674 13.1542 5.34489 12.946 5.60165 12.946H6.53789C6.79465 12.946 7.0028 13.1542 7.0028 13.4109V17.4238C7.0028 17.6806 7.21095 17.8887 7.46771 17.8887H11.1128C11.3696 17.8887 11.5778 17.6806 11.5778 17.4238V10.1475C11.5778 9.93804 11.4706 9.74315 11.2937 9.63094L6.33601 6.48584C6.13254 6.35676 5.87224 6.35916 5.67118 6.49196L0.920576 9.62977C0.749138 9.743 0.645996 9.93474 0.645996 10.1402Z" fill="url(#ph-logo-paint0)"/>
+            <path d="M13.172 13.7986V17.4237C13.172 17.6805 13.3801 17.8886 13.6369 17.8886H23.4111C23.6678 17.8886 23.876 17.6805 23.876 17.4237V13.9454C23.876 13.6076 23.6021 13.3337 23.2643 13.3337H13.6369C13.3801 13.3337 13.172 13.5418 13.172 13.7986Z" fill="url(#ph-logo-paint1)"/>
+            <path d="M7.17909 0.580078C6.84125 0.580078 6.56737 0.853956 6.56737 1.1918V4.30838C6.56737 4.46644 6.64768 4.61367 6.78056 4.69925L12.848 8.60669C13.0229 8.7193 13.1285 8.91302 13.1285 9.12099V11.2747C13.1285 11.5314 13.3367 11.7396 13.5934 11.7396H17.9452C18.202 11.7396 18.4101 11.5314 18.4101 11.2747V1.1918C18.4101 0.853956 18.1362 0.580078 17.7984 0.580078H7.17909Z" fill="url(#ph-logo-paint2)"/>
+            <path d="M23.6057 19.4829H19.8219C19.5804 19.4829 19.3786 19.6666 19.3531 19.9067C19.2257 21.1027 18.7933 24.545 17.8667 26.5079C17.0032 28.3371 15.7469 29.8202 15.2297 30.3904C15.1549 30.473 15.222 30.6013 15.3307 30.5771C16.8759 30.233 23.2459 28.3166 24.0619 19.985C24.0882 19.7169 23.875 19.4829 23.6057 19.4829Z" fill="url(#ph-logo-paint3)"/>
+            <path d="M13.172 19.9478V30.3081C13.172 30.5153 13.4153 30.6127 13.5522 30.4571C14.1685 29.7562 15.4186 28.2037 16.4296 26.1115C17.5356 23.8225 17.7026 21.0117 17.724 19.9333C17.729 19.6817 17.5247 19.4829 17.273 19.4829H13.6369C13.3801 19.4829 13.172 19.6911 13.172 19.9478Z" fill="url(#ph-logo-paint4)"/>
+            <path d="M1.14407 19.4829H4.92785C5.16932 19.4829 5.37109 19.6666 5.39666 19.9067C5.52406 21.1027 5.95646 24.545 6.88303 26.5079C7.74648 28.3371 9.00286 29.8202 9.51999 30.3904C9.59482 30.473 9.52773 30.6013 9.419 30.5771C7.87382 30.233 1.50382 28.3166 0.687827 19.985C0.661572 19.7169 0.874715 19.4829 1.14407 19.4829Z" fill="url(#ph-logo-paint5)"/>
+            <path d="M11.5778 19.9478V30.3081C11.5778 30.5153 11.3344 30.6127 11.1975 30.4571C10.5812 29.7562 9.33109 28.2037 8.32016 26.1115C7.21415 23.8225 7.04711 21.0117 7.0257 19.9333C7.0207 19.6817 7.22501 19.4829 7.47673 19.4829H11.1128C11.3696 19.4829 11.5778 19.6911 11.5778 19.9478Z" fill="url(#ph-logo-paint6)"/>
+            <path d="M31.064 21.5246V9.56733H36.4789C37.1963 9.56733 37.8397 9.73246 38.4091 10.0627C38.9785 10.393 39.4227 10.8599 39.7415 11.4634C40.0604 12.067 40.2198 12.7616 40.2198 13.5474C40.2198 14.3332 40.0604 15.0335 39.7415 15.6484C39.4227 16.252 38.9785 16.7189 38.4091 17.0492C37.8397 17.3794 37.1963 17.5445 36.4789 17.5445H33.2846V21.5246H31.064ZM36.3764 15.4093C36.8433 15.4093 37.2305 15.2442 37.538 14.9139C37.8454 14.5723 37.9992 14.1225 37.9992 13.5645C37.9992 13.0065 37.8454 12.5566 37.538 12.215C37.2305 11.8734 36.8433 11.7026 36.3764 11.7026H33.2846V15.4093H36.3764Z" fill="#014EFB"/>
+            <path d="M42.0197 21.5246V12.8812H43.8132L43.9841 13.6157H44.0695C44.4111 13.126 44.9349 12.8812 45.641 12.8812H47.2296V14.8456H45.7777C45.231 14.8456 44.8154 14.9936 44.5307 15.2897C44.246 15.5744 44.1036 15.9958 44.1036 16.5538V21.5246H42.0197Z" fill="#014EFB"/>
+            <path d="M50.6094 21.5246H48.5254V12.8812H50.6094V21.5246ZM50.6948 11.4122H48.4571V9.46484H50.6948V11.4122Z" fill="#014EFB"/>
+            <path d="M56.7247 21.6954C55.9047 21.6954 55.1588 21.5018 54.487 21.1146C53.8151 20.7274 53.2855 20.1922 52.8984 19.5089C52.5226 18.8257 52.3347 18.057 52.3347 17.2029C52.3347 16.3488 52.5226 15.5801 52.8984 14.8969C53.2855 14.2136 53.8151 13.6784 54.487 13.2912C55.1588 12.904 55.9047 12.7104 56.7247 12.7104C57.4877 12.7104 58.1595 12.8641 58.7403 13.1716C59.3211 13.4791 59.788 13.8833 60.141 14.3844C60.4941 14.8855 60.7275 15.4321 60.8414 16.0242H58.7232C58.598 15.6257 58.3645 15.2954 58.0229 15.0335C57.6926 14.7716 57.2599 14.6406 56.7247 14.6406C56.3033 14.6406 55.9161 14.7488 55.5631 14.9652C55.2215 15.1815 54.9482 15.4833 54.7432 15.8705C54.5382 16.2577 54.4357 16.7018 54.4357 17.2029C54.4357 17.704 54.5382 18.1481 54.7432 18.5353C54.9482 18.9225 55.2215 19.2242 55.5631 19.4406C55.9161 19.657 56.3033 19.7652 56.7247 19.7652C57.2713 19.7652 57.7097 19.6342 58.04 19.3723C58.3816 19.099 58.6094 18.7459 58.7232 18.3132H60.8414C60.7275 18.9282 60.4941 19.4918 60.141 20.0043C59.788 20.5168 59.3211 20.9267 58.7403 21.2342C58.1595 21.5417 57.4877 21.6954 56.7247 21.6954Z" fill="#014EFB"/>
+            <path d="M66.4166 21.6954C65.5967 21.6954 64.8507 21.5018 64.1789 21.1146C63.507 20.7274 62.9774 20.1922 62.5903 19.5089C62.2145 18.8257 62.0266 18.057 62.0266 17.2029C62.0266 16.3488 62.2145 15.5801 62.5903 14.8969C62.9774 14.2136 63.507 13.6784 64.1789 13.2912C64.8507 12.904 65.5967 12.7104 66.4166 12.7104C67.2137 12.7104 67.9369 12.8983 68.586 13.2741C69.2351 13.6499 69.7418 14.168 70.1062 14.8285C70.482 15.4776 70.6699 16.2065 70.6699 17.015C70.6699 17.3908 70.6415 17.6812 70.5845 17.8862H64.1105C64.1903 18.4897 64.4465 18.9851 64.8792 19.3723C65.312 19.7481 65.8244 19.936 66.4166 19.936C66.8493 19.936 67.2308 19.8449 67.5611 19.6627C67.9027 19.4805 68.1475 19.2584 68.2956 18.9965H70.4308C70.1917 19.7139 69.7247 20.3459 69.0301 20.8926C68.3468 21.4278 67.4757 21.6954 66.4166 21.6954ZM68.586 16.4684C68.529 15.8876 68.3013 15.4036 67.9027 15.0164C67.5041 14.6292 67.0087 14.4356 66.4166 14.4356C65.7902 14.4356 65.2721 14.6292 64.8621 15.0164C64.4522 15.3922 64.2016 15.8762 64.1105 16.4684H68.586Z" fill="#014EFB"/>
+            <path d="M74.7713 21.5246H72.5507V9.56733H74.7713V14.3844H80.1521V9.56733H82.3727V21.5246H80.1521V16.6221H74.7713V21.5246Z" fill="#003875"/>
+            <path d="M88.1405 21.6954C87.48 21.6954 86.8878 21.5474 86.364 21.2513C85.8515 20.9438 85.4472 20.5168 85.1512 19.9701C84.8665 19.4235 84.7241 18.7915 84.7241 18.0741V12.8812H86.8081V17.8008C86.8081 18.3588 86.9846 18.82 87.3376 19.1844C87.6906 19.5374 88.1348 19.7139 88.67 19.7139C89.228 19.7139 89.6892 19.5317 90.0536 19.1673C90.418 18.7915 90.6002 18.336 90.6002 17.8008V12.8812H92.6842V21.5246H90.8736L90.7027 20.6876H90.6173C90.3896 20.9609 90.0536 21.2 89.6095 21.405C89.1768 21.5986 88.6871 21.6954 88.1405 21.6954Z" fill="#003875"/>
+            <path d="M99.5981 21.6954C99.0173 21.6954 98.5048 21.5929 98.0607 21.3879C97.628 21.1716 97.2749 20.8869 97.0016 20.5338H96.9162L96.7454 21.5246H94.9518V9.56733H97.0358V13.7865H97.1212C97.3717 13.4791 97.7077 13.2228 98.129 13.0179C98.5618 12.8129 99.0515 12.7104 99.5981 12.7104C100.338 12.7104 101.01 12.8983 101.614 13.2741C102.229 13.6499 102.713 14.1794 103.066 14.8627C103.419 15.546 103.595 16.326 103.595 17.2029C103.595 18.0798 103.419 18.8598 103.066 19.5431C102.713 20.2264 102.229 20.7559 101.614 21.1317C101.01 21.5075 100.338 21.6954 99.5981 21.6954ZM99.2735 19.7652C99.9112 19.7652 100.441 19.5317 100.862 19.0648C101.295 18.5865 101.511 17.9659 101.511 17.2029C101.511 16.4399 101.295 15.825 100.862 15.3581C100.441 14.8798 99.9112 14.6406 99.2735 14.6406C98.6358 14.6406 98.1006 14.8798 97.6678 15.3581C97.2465 15.825 97.0358 16.4399 97.0358 17.2029C97.0358 17.9659 97.2465 18.5865 97.6678 19.0648C98.1006 19.5317 98.6358 19.7652 99.2735 19.7652Z" fill="#003875"/>
+            <path d="M110.057 21.6954C109.477 21.6954 108.964 21.5929 108.52 21.3879C108.087 21.1716 107.734 20.8869 107.461 20.5338H107.375L107.205 21.5246H105.411V9.56733H107.495V13.7865H107.58C107.831 13.4791 108.167 13.2228 108.588 13.0179C109.021 12.8129 109.511 12.7104 110.057 12.7104C110.798 12.7104 111.469 12.8983 112.073 13.2741C112.688 13.6499 113.172 14.1794 113.525 14.8627C113.878 15.546 114.054 16.326 114.054 17.2029C114.054 18.0798 113.878 18.8598 113.525 19.5431C113.172 20.2264 112.688 20.7559 112.073 21.1317C111.469 21.5075 110.798 21.6954 110.057 21.6954ZM109.733 19.7652C110.37 19.7652 110.9 19.5317 111.321 19.0648C111.754 18.5865 111.97 17.9659 111.97 17.2029C111.97 16.4399 111.754 15.825 111.321 15.3581C110.9 14.8798 110.37 14.6406 109.733 14.6406C109.095 14.6406 108.56 14.8798 108.127 15.3581C107.706 15.825 107.495 16.4399 107.495 17.2029C107.495 17.9659 107.706 18.5865 108.127 19.0648C108.56 19.5317 109.095 19.7652 109.733 19.7652Z" fill="#003875"/>
+            <path d="M117.954 21.5246H115.87V9.56733H117.954V21.5246Z" fill="#003875"/>
+            <path d="M124.151 21.6954C123.331 21.6954 122.585 21.5018 121.913 21.1146C121.241 20.7274 120.712 20.1922 120.325 19.5089C119.949 18.8257 119.761 18.057 119.761 17.2029C119.761 16.3488 119.949 15.5801 120.325 14.8969C120.712 14.2136 121.241 13.6784 121.913 13.2912C122.585 12.904 123.331 12.7104 124.151 12.7104C124.948 12.7104 125.671 12.8983 126.32 13.2741C126.969 13.6499 127.476 14.168 127.841 14.8285C128.216 15.4776 128.404 16.2065 128.404 17.015C128.404 17.3908 128.376 17.6812 128.319 17.8862H121.845C121.925 18.4897 122.181 18.9851 122.614 19.3723C123.046 19.7481 123.559 19.936 124.151 19.936C124.584 19.936 124.965 19.8449 125.295 19.6627C125.637 19.4805 125.882 19.2584 126.03 18.9965H128.165C127.926 19.7139 127.459 20.3459 126.765 20.8926C126.081 21.4278 125.21 21.6954 124.151 21.6954ZM126.32 16.4684C126.263 15.8876 126.036 15.4036 125.637 15.0164C125.239 14.6292 124.743 14.4356 124.151 14.4356C123.525 14.4356 123.007 14.6292 122.597 15.0164C122.187 15.3922 121.936 15.8762 121.845 16.4684H126.32Z" fill="#003875"/>
+            <defs>
+              <linearGradient id="ph-logo-paint0" x1="0.645996" y1="3.89957" x2="20.8949" y2="30.5661" gradientUnits="userSpaceOnUse"><stop stop-color="#007AFF"/><stop offset="0.457692" stop-color="#014EFB"/><stop offset="1" stop-color="#003875"/></linearGradient>
+              <linearGradient id="ph-logo-paint1" x1="0.645996" y1="3.89957" x2="20.8949" y2="30.5661" gradientUnits="userSpaceOnUse"><stop stop-color="#007AFF"/><stop offset="0.457692" stop-color="#014EFB"/><stop offset="1" stop-color="#003875"/></linearGradient>
+              <linearGradient id="ph-logo-paint2" x1="0.645996" y1="3.89957" x2="20.8949" y2="30.5661" gradientUnits="userSpaceOnUse"><stop stop-color="#007AFF"/><stop offset="0.457692" stop-color="#014EFB"/><stop offset="1" stop-color="#003875"/></linearGradient>
+              <linearGradient id="ph-logo-paint3" x1="0.645996" y1="3.89957" x2="20.8949" y2="30.5661" gradientUnits="userSpaceOnUse"><stop stop-color="#007AFF"/><stop offset="0.457692" stop-color="#014EFB"/><stop offset="1" stop-color="#003875"/></linearGradient>
+              <linearGradient id="ph-logo-paint4" x1="0.645996" y1="3.89957" x2="20.8949" y2="30.5661" gradientUnits="userSpaceOnUse"><stop stop-color="#007AFF"/><stop offset="0.457692" stop-color="#014EFB"/><stop offset="1" stop-color="#003875"/></linearGradient>
+              <linearGradient id="ph-logo-paint5" x1="0.645996" y1="3.89957" x2="20.8949" y2="30.5661" gradientUnits="userSpaceOnUse"><stop stop-color="#007AFF"/><stop offset="0.457692" stop-color="#014EFB"/><stop offset="1" stop-color="#003875"/></linearGradient>
+              <linearGradient id="ph-logo-paint6" x1="0.645996" y1="3.89957" x2="20.8949" y2="30.5661" gradientUnits="userSpaceOnUse"><stop stop-color="#007AFF"/><stop offset="0.457692" stop-color="#014EFB"/><stop offset="1" stop-color="#003875"/></linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="ph-splash-eyebrow"><span class="dot"></span>SMS AI Agent demo</div>
+        <h1 id="ph-splash-title" class="ph-splash-title">
+          Autopilot<span class="accent">.</span> Nurture<span class="accent">.</span> Re-engage<span class="accent">.</span>
+        </h1>
+        <p class="ph-splash-sub">Import your book of past clients and an AI agent texts each one to qualify (re)financing intent and book a meeting with you.</p>
+
+        <div class="np-settings" id="np-settings">
+          <div class="np-row">
+            <label class="np-field">
+              <span>n8n webhook base URL</span>
+              <input id="np-webhook" type="text" placeholder="https://pricehubble.app.n8n.cloud/webhook" />
+            </label>
+          </div>
+          <div class="np-row np-row-2">
+            <label class="np-field">
+              <span>Lead ID</span>
+              <input id="np-lead" type="text" placeholder="6b48b1d9-9453-43b1-a290-87e1a4269bd6" />
+            </label>
+            <label class="np-field">
+              <span>Customer first name</span>
+              <input id="np-name" type="text" placeholder="Jane" />
+            </label>
+          </div>
+          <div class="np-row np-row-2">
+            <label class="np-field">
+              <span>Loan officer</span>
+              <input id="np-lo" type="text" placeholder="Alex" />
+            </label>
+            <label class="np-field">
+              <span>Phone (live mode)</span>
+              <input id="np-phone" type="text" placeholder="+1 555 010 1234" />
+            </label>
+          </div>
+          <div class="np-row np-controls">
+            <div class="np-mode" role="radiogroup" aria-label="Demo mode">
+              <button type="button" id="np-mode-sim" class="np-mode-btn np-mode-on" role="radio" aria-checked="true">Simulate</button>
+              <button type="button" id="np-mode-live" class="np-mode-btn" role="radio" aria-checked="false">Live SMS</button>
+            </div>
+            <button type="button" id="np-start" class="np-start">Start conversation</button>
+          </div>
+          <p class="np-status" id="np-status">Simulate mode: messages post to the n8n inbound webhook and the agent reply renders here. Live mode: the init webhook sends a real Twilio SMS to the phone number above.</p>
+        </div>
+
+        <span class="ph-splash-internal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          For internal users only
+        </span>
+      </section>
+
+      <section class="ph-phone-column" aria-label="SMS AI Agent phone preview">
+        <div id="phone-scale-box" class="ph-phone-scale-box">
+          <div id="sms-rcs-stage" class="ip-stage">
+            <div id="sms-rcs-simulator" class="ip-simulator mode-imsg" aria-label="SMS AI Agent iPhone simulator">
+              <div class="ip-phone">
+                <span class="ip-side-btn ip-side-btn--mute" aria-hidden="true"></span>
+                <span class="ip-side-btn ip-side-btn--vol-up" aria-hidden="true"></span>
+                <span class="ip-side-btn ip-side-btn--vol-down" aria-hidden="true"></span>
+                <span class="ip-side-btn ip-side-btn--power" aria-hidden="true"></span>
+                <div class="ip-screen">
+                  <div class="ip-scroll" id="sms-rcs-demo-scroll">
+                    <div class="ip-thread" id="sms-rcs-demo-thread" aria-live="polite"></div>
+                  </div>
+                  <div class="ip-glass-top" aria-hidden="true"></div>
+                  <div class="ip-glass-bot" aria-hidden="true"></div>
+                  <div class="ip-statusbar" aria-hidden="true">
+                    <div class="ip-status-left">
+                      <span class="ip-status-time">9:41</span>
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="black">
+                        <circle cx="8" cy="5" r="2.6"></circle>
+                        <path d="M3 14c0-2.8 2.3-5 5-5s5 2.2 5 5v.5H3V14z"></path>
+                      </svg>
+                    </div>
+                    <div class="ip-status-right">
+                      <svg width="18" height="11" viewBox="0 0 18 11" fill="black">
+                        <rect x="0" y="7" width="3" height="4" rx="0.8"></rect>
+                        <rect x="5" y="5" width="3" height="6" rx="0.8"></rect>
+                        <rect x="10" y="3" width="3" height="8" rx="0.8"></rect>
+                        <rect x="15" y="0" width="3" height="11" rx="0.8" opacity="0.32"></rect>
+                      </svg>
+                      <span class="ip-status-5g">5G</span>
+                      <svg width="36" height="14" viewBox="0 0 36 14">
+                        <rect x="0.5" y="0.5" width="31" height="13" rx="3.6" ry="3.6" fill="none" stroke="black" stroke-opacity="0.35" stroke-width="1"></rect>
+                        <rect x="33" y="4.5" width="2" height="5" rx="1" fill="black" fill-opacity="0.35"></rect>
+                        <rect x="2" y="2" width="27" height="10" rx="2.2" fill="#34C759"></rect>
+                        <text x="16" y="11" text-anchor="middle" font-size="9.5" font-weight="600" fill="#fff" letter-spacing="-0.4">100</text>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="ip-header">
+                    <div class="ip-avatar" id="sms-rcs-demo-avatar">PH</div>
+                  </div>
+                  <div class="ip-footer" id="sms-rcs-demo-footer">
+                    <button type="button" class="ip-plus" aria-label="Add attachment">
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                        <path d="M9 3v12M3 9h12"></path>
+                      </svg>
+                    </button>
+                    <div class="ip-input-wrap">
+                      <input id="sms-rcs-demo-input" class="ip-input" type="text" placeholder="iMessage" autocomplete="off" aria-label="Message the AI agent" />
+                      <button type="button" id="sms-rcs-demo-mic" class="ip-trailing ip-mic" aria-label="Record audio">
+                        <svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M13 4.5a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0v-5a3 3 0 0 0-3-3z"></path>
+                          <path d="M7 11.5a6 6 0 0 0 12 0"></path>
+                          <path d="M13 17.5v4"></path>
+                          <path d="M10 21.5h6"></path>
+                        </svg>
+                      </button>
+                      <button type="button" id="sms-rcs-demo-send" class="ip-trailing ip-send hidden" aria-label="Send message">
+                        <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M8.5 13.5v-10"></path>
+                          <path d="M4.5 7.5l4-4 4 4"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="ip-home" aria-hidden="true"></div>
+                  <div class="ip-island" aria-hidden="true"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      // --- Config: override via ?webhook=...&lead=...&name=...&lo=... query params ---
+      const DEFAULTS = {
+        webhook: 'https://pricehubble.app.n8n.cloud/webhook',
+        lead: '6b48b1d9-9453-43b1-a290-87e1a4269bd6',
+        name: 'Jane',
+        lo: 'Alex',
+        phone: '',
+        booking: ''
+      };
+      const params = new URLSearchParams(window.location.search);
+      function param(key) { return params.get(key) || DEFAULTS[key] || ''; }
+
+      let mode = 'simulate';
+      let messages = [];
+      let typing = false;
+      let timer = null;
+      let idCounter = 1;
+
+      function cfg() {
+        return {
+          webhook: (document.getElementById('np-webhook').value || DEFAULTS.webhook).replace(/\/+$/, ''),
+          lead: document.getElementById('np-lead').value || DEFAULTS.lead,
+          name: document.getElementById('np-name').value || DEFAULTS.name,
+          lo: document.getElementById('np-lo').value || DEFAULTS.lo,
+          phone: document.getElementById('np-phone').value || DEFAULTS.phone,
+          booking: DEFAULTS.booking
+        };
+      }
+      function setStatus(text) {
+        const el = document.getElementById('np-status');
+        if (el) el.textContent = text;
+      }
+      function pushAgent(text) {
+        idCounter += 1;
+        messages.push({ id: 'a' + idCounter, from: 'agent', text: text, t: Date.now(), entering: true });
+        renderPhone();
+      }
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function linkify(text) {
+        const safe = escapeHtml(text || '');
+        return safe.replace(/(https?:\/\/\S+|[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|\b\d{4,}\b)/gi, '<span class="imsg-link">$1</span>');
+      }
+
+      function rowMargin(message, previous) {
+        if (!previous) return 4;
+        const gap = Math.abs((message.t || 0) - (previous.t || 0));
+        return previous.from === message.from && gap <= 5 * 60 * 1000 ? 3 : 12;
+      }
+
+      function renderPhone() {
+        const thread = document.getElementById('sms-rcs-demo-thread');
+        const input = document.getElementById('sms-rcs-demo-input');
+        const mic = document.getElementById('sms-rcs-demo-mic');
+        const send = document.getElementById('sms-rcs-demo-send');
+        if (!thread) return;
+        let html = '';
+        messages.forEach((message, index) => {
+          const previous = messages[index - 1] || null;
+          const fromMe = message.from === 'user';
+          const rowClass = fromMe ? 'imsg-row-me' : 'imsg-row-them';
+          const bubbleClass = fromMe ? 'imsg-from-me mode-imsg' : 'imsg-from-them';
+          const enterClass = message.entering ? ' imsg-enter' : '';
+          html += '<div class="imsg-row ' + rowClass + '" style="margin-top:' + rowMargin(message, previous) + 'px">';
+          html += '<div class="imsg-bubble ' + bubbleClass + enterClass + '"><span class="imsg-text">' + linkify(message.text) + '</span></div>';
+          html += '</div>';
+        });
+        if (typing) {
+          html += '<div class="imsg-row imsg-row-them" style="margin-top:12px">';
+          html += '<div class="imsg-bubble imsg-from-them imsg-typing imsg-enter"><span class="imsg-dot"></span><span class="imsg-dot"></span><span class="imsg-dot"></span></div>';
+          html += '</div>';
+        }
+        thread.innerHTML = html;
+        const hasDraft = !!(input && input.value.trim());
+        if (mic) mic.classList.toggle('hidden', hasDraft);
+        if (send) send.classList.toggle('hidden', !hasDraft);
+        requestAnimationFrame(() => {
+          const scroll = document.getElementById('sms-rcs-demo-scroll');
+          if (scroll) scroll.scrollTo({ top: scroll.scrollHeight, behavior: 'smooth' });
+        });
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => {
+          messages = messages.map(message => Object.assign({}, message, { entering: false }));
+        }, 220);
+      }
+
+      async function postJson(url, payload) {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const raw = await res.text();
+        if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + raw.slice(0, 160));
+        try { return JSON.parse(raw); } catch (e) { return { reply: raw }; }
+      }
+
+      async function startConversation() {
+        const c = cfg();
+        const btn = document.getElementById('np-start');
+        if (btn) btn.disabled = true;
+        messages = [];
+        renderPhone();
+        if (mode === 'live') {
+          if (!c.phone) { setStatus('Enter a phone number for live mode.'); if (btn) btn.disabled = false; return; }
+          setStatus('Sending real SMS to ' + c.phone + ' via Twilio...');
+        } else {
+          setStatus('Starting conversation via the n8n init webhook...');
+        }
+        typing = true; renderPhone();
+        try {
+          const data = await postJson(c.webhook + '/autopilot-nurturing-init', {
+            mode: 'init', lead_id: c.lead, customer_first_name: c.name,
+            loan_officer_name: c.lo, booking_link: c.booking,
+            to_phone: c.phone, from: c.phone
+          });
+          typing = false;
+          if (data && data.reply) pushAgent(data.reply);
+          setStatus(mode === 'live'
+            ? 'SMS sent. Replies from the customer flow back through the inbound webhook.'
+            : 'Conversation started. Reply below to continue.');
+        } catch (err) {
+          typing = false; renderPhone();
+          setStatus('Could not reach the init webhook. ' + err.message);
+        } finally {
+          if (btn) btn.disabled = false;
+        }
+      }
+
+      async function sendMessage() {
+        const input = document.getElementById('sms-rcs-demo-input');
+        if (!input) return;
+        const text = input.value.trim();
+        if (!text) return;
+        idCounter += 1;
+        messages.push({ id: 'u' + idCounter, from: 'user', text, t: Date.now(), entering: true });
+        input.value = '';
+        typing = true;
+        renderPhone();
+        const c = cfg();
+        try {
+          const data = await postJson(c.webhook + '/autopilot-nurturing-inbound', {
+            mode: 'inbound', from: c.phone || c.lead, body: text, lead_id: c.lead,
+            customer_first_name: c.name, loan_officer_name: c.lo, booking_link: c.booking
+          });
+          typing = false;
+          pushAgent((data && data.reply) ? data.reply : '(no reply)');
+        } catch (err) {
+          typing = false;
+          pushAgent('[demo] Could not reach the agent webhook: ' + err.message);
+        }
+      }
+
+      function scalePhone() {
+        const shell = document.querySelector('.ph-splash-shell');
+        const box = document.getElementById('phone-scale-box');
+        if (!shell || !box) return;
+        const phoneH = 868;
+        const phoneW = 414;
+        const compact = window.matchMedia('(max-width: 880px)').matches;
+        const availableH = compact ? window.innerHeight - 360 : window.innerHeight - 112;
+        const availableW = compact ? window.innerWidth - 48 : Math.max(360, shell.clientWidth * 0.45);
+        const scale = Math.min(1, availableH / phoneH, availableW / phoneW);
+        box.style.setProperty('--ip-scale', String(Math.max(0.48, scale)));
+      }
+
+      // Prefill settings from defaults / query params
+      document.getElementById('np-webhook').value = param('webhook');
+      document.getElementById('np-lead').value = param('lead');
+      document.getElementById('np-name').value = param('name');
+      document.getElementById('np-lo').value = param('lo');
+      document.getElementById('np-phone').value = param('phone');
+
+      function setMode(next) {
+        mode = next;
+        const sim = document.getElementById('np-mode-sim');
+        const live = document.getElementById('np-mode-live');
+        sim.classList.toggle('np-mode-on', next === 'simulate');
+        live.classList.toggle('np-mode-on', next === 'live');
+        sim.setAttribute('aria-checked', String(next === 'simulate'));
+        live.setAttribute('aria-checked', String(next === 'live'));
+      }
+      document.getElementById('np-mode-sim')?.addEventListener('click', () => setMode('simulate'));
+      document.getElementById('np-mode-live')?.addEventListener('click', () => setMode('live'));
+      document.getElementById('np-start')?.addEventListener('click', startConversation);
+
+      document.getElementById('sms-rcs-demo-send')?.addEventListener('click', sendMessage);
+      document.getElementById('sms-rcs-demo-input')?.addEventListener('keydown', event => {
+        if (event.key !== 'Enter' || event.shiftKey) return;
+        event.preventDefault();
+        sendMessage();
+      });
+      document.getElementById('sms-rcs-demo-input')?.addEventListener('input', renderPhone);
+      window.addEventListener('resize', scalePhone);
+      scalePhone();
+      renderPhone();
+    })();
+  </script>
+</body>
+</html>
