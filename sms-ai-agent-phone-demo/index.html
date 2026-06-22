@@ -676,6 +676,9 @@
   <script>
     (function () {
       // --- Config: override via ?webhook=...&lead=...&name=...&lo=... query params ---
+      // n8n webhook node IDs (default auto-generated UUIDs, not fixed paths)
+      const INIT_PATH = '716e74ea-8971-46bf-984e-76e47b0712a9';
+      const INBOUND_PATH = '438fc3cf-394d-4e6e-81d8-5fab341d1148';
       const DEFAULTS = {
         webhook: 'https://pricehubble.app.n8n.cloud/webhook',
         lead: '6b48b1d9-9453-43b1-a290-87e1a4269bd6',
@@ -794,7 +797,7 @@
         }
         typing = true; renderPhone();
         try {
-          const data = await postJson(c.webhook + '/autopilot-nurturing-init', {
+          const data = await postJson(c.webhook + '/' + INIT_PATH, {
             mode: 'init', lead_id: c.lead, customer_first_name: c.name,
             loan_officer_name: c.lo, booking_link: c.booking,
             to_phone: c.phone, from: c.phone
@@ -824,7 +827,7 @@
         renderPhone();
         const c = cfg();
         try {
-          const data = await postJson(c.webhook + '/autopilot-nurturing-inbound', {
+          const data = await postJson(c.webhook + '/' + INBOUND_PATH, {
             mode: 'inbound', from: c.phone || c.lead, body: text, lead_id: c.lead,
             customer_first_name: c.name, loan_officer_name: c.lo, booking_link: c.booking
           });
