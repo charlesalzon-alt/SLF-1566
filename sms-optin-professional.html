@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SMS Opt-in (Account &amp; Lead Notifications) - PriceHubble</title>
+<style>
+  :root { --ink:#0f172a; --muted:#475569; --line:#e2e8f0; --brand:#1d4ed8; --bg:#f8fafc; --ok:#16a34a; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; color:var(--ink); background:var(--bg); line-height:1.6; }
+  .wrap { max-width:820px; margin:0 auto; padding:40px 20px 80px; }
+  header { border-bottom:1px solid var(--line); padding-bottom:16px; margin-bottom:24px; }
+  .brand { font-weight:700; font-size:18px; letter-spacing:.2px; color:var(--brand); }
+  h1 { font-size:25px; margin:16px 0 4px; }
+  .updated { color:var(--muted); font-size:13px; }
+  h2 { font-size:17px; margin:30px 0 8px; }
+  a { color:var(--brand); }
+  .muted { color:var(--muted); }
+  ol li { margin:6px 0; }
+  .pill { display:inline-block; background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; border-radius:999px; padding:2px 10px; font-size:12px; font-weight:600; }
+  /* settings mockup */
+  .mock { background:#fff; border:1px solid var(--line); border-radius:14px; padding:0; overflow:hidden; margin:14px 0 8px; box-shadow:0 1px 2px rgba(15,23,42,.04); }
+  .mock .bar { background:#0f172a; color:#fff; padding:10px 16px; font-size:13px; font-weight:600; }
+  .mock .body { padding:18px 18px 20px; }
+  .mock .crumbs { color:var(--muted); font-size:12px; margin-bottom:12px; }
+  .mock h3 { margin:0 0 14px; font-size:16px; }
+  .optrow { display:flex; gap:12px; align-items:flex-start; padding:14px; border:1px solid var(--line); border-radius:10px; background:#fcfdff; }
+  .optrow input { width:18px; height:18px; margin-top:3px; }
+  .optrow label { font-size:14px; color:var(--ink); }
+  .field { margin-top:14px; }
+  .field label { display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }
+  .field .inp { border:1px solid var(--line); border-radius:8px; padding:9px 12px; font-size:14px; color:var(--ink); background:#fff; max-width:260px; }
+  .save { margin-top:16px; background:var(--brand); color:#fff; border:none; border-radius:8px; padding:9px 18px; font-size:14px; font-weight:600; }
+  .cap { color:var(--muted); font-size:12px; margin-top:6px; }
+  .slot { border:2px dashed #cbd5e1; border-radius:12px; padding:22px; text-align:center; color:var(--muted); font-size:13px; background:#fff; margin:14px 0; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin:14px 0; }
+  code { background:#eef2ff; padding:1px 6px; border-radius:6px; font-size:13px; }
+  footer { margin-top:40px; padding-top:16px; border-top:1px solid var(--line); color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">PriceHubble</div>
+  </header>
+
+  <h1>SMS Opt-in: Account and Lead Notifications</h1>
+  <div class="updated">Audience: PriceHubble platform users (real estate and mortgage professionals) &middot; Last updated: June 24, 2026</div>
+
+  <p>This page documents how end users consent to receive SMS from the PriceHubble account and
+  lead notification program, for A2P 10DLC campaign review.</p>
+
+  <h2>Who receives messages</h2>
+  <p>Recipients are existing PriceHubble customers who have a PriceHubble account. Messages are
+  transactional notifications about the user's own account and lead activity (new property
+  requests, valuation updates, client interactions).</p>
+
+  <h2>How users opt in (call to action)</h2>
+  <ol>
+    <li>The user signs in to their account at <a href="https://app.pricehubble.com">app.pricehubble.com</a>.</li>
+    <li>They open <strong>Settings &gt; Notifications</strong>.</li>
+    <li>They enter their mobile number and actively check the SMS consent box. <span class="pill">Unchecked by default</span></li>
+    <li>They save. SMS consent is optional and is not a condition of using PriceHubble.</li>
+  </ol>
+
+  <h2>Opt-in screen</h2>
+  <div class="mock" aria-label="PriceHubble notification settings mockup">
+    <div class="bar">PriceHubble &nbsp;&rsaquo;&nbsp; Settings</div>
+    <div class="body">
+      <div class="crumbs">Settings / Notifications</div>
+      <h3>SMS notifications</h3>
+      <div class="optrow">
+        <input type="checkbox" disabled aria-label="SMS consent, unchecked by default">
+        <label>I agree to receive SMS notifications from PriceHubble about my account and lead
+        activity (new property requests, valuation updates, client interactions). Message
+        frequency varies. Message and data rates may apply. Reply STOP to opt out, HELP for help.</label>
+      </div>
+      <div class="field">
+        <label>Mobile number</label>
+        <div class="inp">+1 &nbsp;&nbsp;___ ___ ____</div>
+      </div>
+      <button class="save" type="button" disabled>Save</button>
+    </div>
+  </div>
+  <div class="cap">Representation of the in-product opt-in. The consent checkbox is unchecked by default and requires active selection.</div>
+
+  <div class="slot">
+    Live in-product screenshot of <strong>Settings &gt; Notifications</strong> to be inserted here.
+  </div>
+
+  <h2>Consent language (exact)</h2>
+  <div class="card">
+    "I agree to receive SMS notifications from PriceHubble about my account and lead activity
+    (new property requests, valuation updates, client interactions). Message frequency varies.
+    Message and data rates may apply. Reply STOP to opt out, HELP for help."
+  </div>
+
+  <h2>Required disclosures</h2>
+  <ul>
+    <li><strong>Program:</strong> PriceHubble account and lead notifications.</li>
+    <li><strong>Message frequency:</strong> recurring, varies with account activity.</li>
+    <li><strong>Cost:</strong> message and data rates may apply.</li>
+    <li><strong>Opt-out:</strong> reply <code>STOP</code>. <strong>Help:</strong> reply <code>HELP</code>.</li>
+    <li><strong>Privacy:</strong> <a href="sms-privacy.html">SMS Privacy Policy</a>. No mobile
+    opt-in information or consent is shared with third parties or affiliates for marketing or
+    promotional purposes.</li>
+    <li><strong>Terms:</strong> <a href="sms-terms.html">SMS Terms and Conditions</a>.</li>
+  </ul>
+
+  <h2>Sample messages</h2>
+  <ul>
+    <li>"PriceHubble: one of your leads requested a callback. View the details in your dashboard: https://app.pricehubble.com . Reply STOP to opt out, HELP for help."</li>
+    <li>"PriceHubble: a new valuation request was submitted by one of your prospects. Review it in your dashboard: https://app.pricehubble.com . Reply STOP to opt out, HELP for help."</li>
+  </ul>
+
+  <footer>
+    <p>PriceHubble &middot; <a href="sms-privacy.html">SMS Privacy Policy</a> &middot;
+    <a href="sms-terms.html">SMS Terms</a></p>
+  </footer>
+</div>
+</body>
+</html>
