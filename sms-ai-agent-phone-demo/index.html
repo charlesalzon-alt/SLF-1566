@@ -480,6 +480,7 @@
       border-radius: 9px; background: #fff; outline: none;
     }
     .np-field input:focus { border-color: #014EFB; }
+    .np-field input:disabled { color: #b0b7bf; background: #f4f6f8; cursor: not-allowed; }
     .np-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
     .np-mode { display: inline-flex; background: #eef2f7; border-radius: 10px; padding: 3px; }
     .np-mode-btn {
@@ -487,6 +488,15 @@
       border: 0; background: transparent; padding: 7px 14px; border-radius: 8px; cursor: pointer;
     }
     .np-mode-on { background: #fff; color: #014EFB; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .np-mode-btn:disabled,
+    .np-mode-locked {
+      color: #b0b7bf;
+      text-decoration: line-through;
+      cursor: not-allowed;
+      filter: grayscale(1);
+      opacity: 0.55;
+      pointer-events: none;
+    }
     .np-start {
       font: inherit; font-size: 14px; font-weight: 700; color: #fff;
       background: #014EFB; border: 0; border-radius: 10px; padding: 9px 18px; cursor: pointer;
@@ -574,17 +584,17 @@
             </label>
             <label class="np-field">
               <span>Phone (live mode)</span>
-              <input id="np-phone" type="text" placeholder="+1 555 010 1234" />
+              <input id="np-phone" type="text" placeholder="+1 555 010 1234" disabled title="Live SMS stays off until the Partners number is registered with the carriers." />
             </label>
           </div>
           <div class="np-row np-controls">
             <div class="np-mode" role="radiogroup" aria-label="Demo mode">
               <button type="button" id="np-mode-sim" class="np-mode-btn np-mode-on" role="radio" aria-checked="true">Simulate</button>
-              <button type="button" id="np-mode-live" class="np-mode-btn" role="radio" aria-checked="false">Live SMS</button>
+              <button type="button" id="np-mode-live" class="np-mode-btn np-mode-locked" role="radio" aria-checked="false" aria-disabled="true" disabled title="Live SMS stays off until the Partners number is registered with the carriers (Twilio A2P 10DLC).">Live SMS</button>
             </div>
             <button type="button" id="np-start" class="np-start">Start conversation</button>
           </div>
-          <p class="np-status" id="np-status">Simulate mode: messages post to the n8n inbound webhook and the agent reply renders here. Live mode: the init webhook sends a real Twilio SMS to the phone number above.</p>
+          <p class="np-status" id="np-status">Simulate only. Live SMS is off until the Partners number is registered with the carriers (Twilio A2P 10DLC).</p>
         </div>
 
         <span class="ph-splash-internal">
@@ -790,17 +800,17 @@
         messages = [];
         renderPhone();
         if (mode === 'live') {
-          if (!c.phone) { setStatus('Enter a phone number for live mode.'); if (btn) btn.disabled = false; return; }
-          setStatus('Sending real SMS to ' + c.phone + ' via Twilio...');
-        } else {
-          setStatus('Starting conversation via the n8n init webhook...');
+          setStatus('Live SMS is off until the Partners number is registered with the carriers.');
+          if (btn) btn.disabled = false;
+          return;
         }
+        setStatus('Starting conversation via the n8n init webhook...');
         typing = true; renderPhone();
         try {
           const data = await postJson(c.webhook + '/' + INIT_PATH, {
             mode: 'init', lead_id: c.lead, customer_first_name: c.name,
             loan_officer_name: c.lo, booking_link: c.booking,
-            to_phone: c.phone, from: c.phone
+            to_phone: '', from: ''
           });
           typing = false;
           if (data && data.reply) pushAgent(data.reply);
@@ -828,7 +838,7 @@
         const c = cfg();
         try {
           const data = await postJson(c.webhook + '/' + INBOUND_PATH, {
-            mode: 'inbound', from: c.phone || c.lead, body: text, lead_id: c.lead,
+            mode: 'inbound', from: c.lead, body: text, lead_id: c.lead,
             customer_first_name: c.name, loan_officer_name: c.lo, booking_link: c.booking
           });
           typing = false;
@@ -860,6 +870,7 @@
       document.getElementById('np-phone').value = param('phone');
 
       function setMode(next) {
+        if (next === 'live') return;
         mode = next;
         const sim = document.getElementById('np-mode-sim');
         const live = document.getElementById('np-mode-live');
@@ -869,7 +880,6 @@
         live.setAttribute('aria-checked', String(next === 'live'));
       }
       document.getElementById('np-mode-sim')?.addEventListener('click', () => setMode('simulate'));
-      document.getElementById('np-mode-live')?.addEventListener('click', () => setMode('live'));
       document.getElementById('np-start')?.addEventListener('click', startConversation);
 
       document.getElementById('sms-rcs-demo-send')?.addEventListener('click', sendMessage);
